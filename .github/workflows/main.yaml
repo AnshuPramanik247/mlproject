@@ -81,13 +81,20 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Stop and remove existing container
+        run: |
+          docker ps -q --filter "name=mltest" | grep -q . && docker stop mltest && docker rm -fv mltest || true
+
+      - name: Free disk space on runner
+        run: |
+          docker system prune -af || true
+          sudo apt-get clean || true
+          sudo rm -rf /var/lib/apt/lists/* || true
+          df -h
+
       - name: Pull latest images
         run: |
           docker pull 365647375329.dkr.ecr.us-east-1.amazonaws.com/studentperformance:latest
-
-      - name: Stop and remove container if running
-        run: |
-          docker ps -q --filter "name=mltest" | grep -q . && docker stop mltest && docker rm -fv mltest || true
 
       - name: Run Docker Image to serve users
         run: |
